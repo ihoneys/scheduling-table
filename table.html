@@ -83,11 +83,12 @@
     min-width: 140px !important;
     height: 60px;
   }
-  /* tbody td {
+  tbody tr td:first-child {
     position: sticky;
     left: 0;
-    z-index: 10;
-  } */
+    z-index: 70;
+    background-color: #fff;
+  }
   /* 隐藏滚动条 */
   tbody::-webkit-scrollbar {
     display: none;
@@ -119,7 +120,7 @@
         <tbody>
           <template v-for="(item,index) in arr">
             <tr>
-              <td :rowspan="mergeRowspan(item,index)" v-if="index === showLeftTd(item,index)">{{item.department}}
+              <td :rowspan="mergeRowspan(item,index)" v-show="index === showLeftTd(item,index)">{{item.department}}
               </td>
               <template v-for="items in item">
                 <template v-if="noDep(items)">
