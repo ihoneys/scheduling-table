@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.14/vue.js"></script>
+</head>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+  }
+
+  #app {
+    padding: 15px;
+  }
+
+
+  .container {
+    max-height: 500px !important;
+    overflow: auto;
+    width: 100%;
+  }
+
+  .table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 1px solid #e7e7e7;
+  }
+
+  .table thead tr th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .table thead tr th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+  }
+
+  .table tbody td {
+    text-align: center;
+    height: 30px;
+    font-size: 14px;
+  }
+  .day-th {
+    border-bottom: 1px solid #e7e7e7;
+    height: 30px;
+    line-height: 30px;
+  }
+
+  .time {
+    display: flex;
+    align-items: center;
+  }
+
+  .time-th {
+    display: inline-block;
+    width: 50%;
+    height: 30px;
+    line-height: 30px;
+  }
+
+  .border-right {
+    border-right: 1px solid #e7e7e7;
+  }
+
+  .base-style {
+    font-size: 12px;
+    color: #333;
+    background: #f5f5f5;
+  }
+
+  .table-th {
+    min-width: 140px !important;
+    height: 60px;
+  }
+  /* tbody td {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+  } */
+  /* 隐藏滚动条 */
+  tbody::-webkit-scrollbar {
+    display: none;
+  }
+</style>
+
+<body>
+  <div id="app">
+    <div>各科专家门诊排班表</div>
+    <div></div>
+    <div class="container">
+      <table style="table-layout: auto;" class="table" border="1">
+        <thead>
+          <tr>
+            <th class="table-th base-style" style="min-width: 80px !important;">科室</th>
+            <template v-for="(item,index) in template">
+              <th colspan="2" class="table-th base-style">
+                <div>
+                  <div class="day-th">{{item.id}}（{{item.data}}）</div>
+                  <div class="time">
+                    <span class="time-th border-right">上午</span>
+                    <span class="time-th">下午</span>
+                  </div>
+                </div>
+              </th>
+            </template>
+          </tr>
+        </thead>
+        <tbody>
+          <template v-for="(item,index) in arr">
+            <tr>
+              <td :rowspan="mergeRowspan(item,index)" v-if="index === showLeftTd(item,index)">{{item.department}}
+              </td>
+              <template v-for="items in item">
+                <template v-if="noDep(items)">
+                  <td>{{items.am || ""}}</td>
+                  <td>{{items.pm || ""}}</td>
+                </template>
+              </template>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+
+<script>
+  new Vue({
+    el: '#app',
+    data: function () {
+      return {
+        template: [],
+        templateList: [{
+            "2021-12-08": {
+              am: "吴琳 窦侠 张杰 胡小平 陈办成 黄国新 陈史宏",
+              pm: "彭曦 钟绮丽 李建军 马刚 邵勇 吴瑕 姜彬"
+            },
+            "2021-12-09": {
+              am: "邵勇 李建军 钟绮丽 陈朝丰",
+              pm: "邵勇 李建军 钟绮丽 陈朝丰 叶蓉 田蔚蔚 张杰 马刚 叶庭路",
+            },
+            "2021-12-10": {
+              am: "邵勇 李建军 钟绮丽 陈朝丰",
+              pm: "邵勇 李建军 钟绮丽 陈朝丰 叶蓉 田蔚蔚 张杰 马刚 叶庭路",
+            },
+            "2021-12-11": {
+              am: "邵勇 李建军 钟绮丽 陈朝丰",
+              pm: "邵勇 李建军 钟绮丽 陈朝丰 叶蓉 田蔚蔚 张杰 马刚 叶庭路",
+            },
+            "2021-12-12": {
+              am: "邵勇 李建军 钟绮丽 陈朝丰",
+              pm: "邵勇 李建军 钟绮丽 陈朝丰 叶蓉 田蔚蔚 张杰 马刚 叶庭路",
+            },
+            "2021-12-13": {
+              am: "邵勇 李建军 钟绮丽 陈朝丰",
+              pm: "邵勇 李建军 钟绮丽 陈朝丰 叶蓉 田蔚蔚 张杰 马刚 叶庭路",
+            },
+            "2021-12-14": {
+              am: "邵勇 李建军 钟绮丽 陈朝丰",
+              pm: "邵勇 李建军 钟绮丽 陈朝丰 叶蓉 田蔚蔚 张杰 马刚 叶庭路",
+            },
+            "2021-12-15": {
+              am: "邵勇 李建军 钟绮丽 陈朝丰",
+              pm: "邵勇 李建军 钟绮丽 陈朝丰 叶蓉 田蔚蔚 张杰 马刚 叶庭路",
+            },
+            "2021-12-16": {
+              am: "钟绮丽",
+              pm: "钟绮丽"
+            },
+            "2021-12-17": {
+              am: "钟绮丽",
+              pm: "钟绮丽"
+            },
+            "2021-12-18": {
+              am: "钟绮丽",
+              pm: "钟绮丽"
+            },
+            "2021-12-19": {
+              am: "钟绮丽",
+              pm: "钟绮丽"
+            },
+            "2021-12-20": {
+              am: "钟绮丽",
+              pm: "钟绮丽"
+            },
+            "2021-12-21": {
+              am: "钟绮丽",
+              pm: "钟绮丽"
+            },
+            "2021-12-22": {
+              am: "钟绮丽",
+              pm: "钟绮丽"
+            },
+            "2021-12-23": {
+              am: "钟绮丽",
+              pm: "钟绮丽"
+            },
+            "department": "皮肤科门诊"
+          },
+          {
+            "2021-12-08": {
+              am: "孟繁斌",
+              pm: "周喆刚",
+            },
+            "2021-12-09": {
+              am: "褚云峰 彭艳斌",
+              pm: "",
+            },
+            "2021-12-10": {
+              am: "周波 王全震",
+              pm: "",
+            },
+            "2021-12-11": {
+              am: "周波",
+              pm: "王拥军",
+            },
+            "2021-12-12": {
+              am: "周波",
+              pm: "王全震",
+            },
+            "2021-12-13": {
+              am: "万圣祥",
+              pm: "王拥军",
+            },
+            "2021-12-14": {
+              am: "肖颖锋",
+              pm: "",
+            },
+            "2021-12-15": {
+              am: "",
+              pm: "周喆刚 孟繁斌",
+            },
+            "2021-12-16": {
+              am: "",
+              pm: "彭艳斌 褚云峰",
+            },
+            "2021-12-17": {
+              am: "王全震 周波",
+              pm: "周波",
+            },
+            "2021-12-18": {
+              am: "周波 周喆刚",
+              pm: "",
+            },
+            "2021-12-19": {
+              am: "褚云峰",
+              pm: "褚云峰",
+            },
+            "2021-12-20": {
+              am: "王拥军",
+              pm: "万圣祥",
+            },
+            "2021-12-21": {
+              am: "肖颖锋",
+              pm: "肖颖锋",
+            },
+            "department": "手显微外科"
+          },
+          {
+            "2021-12-08": {
+              am: "张悦",
+              pm: "王青",
+            },
+            "2021-12-09": {
+              am: "郑磊",
+              pm: "姜蕾",
+            },
+            "2021-12-10": {
+              am: "",
+              pm: "廖瑾岚 熊子波",
+            },
+            "2021-12-11": {
+              am: "李玲艳",
+              pm: "陈丽 高萍 高萍",
+            },
+            "2021-12-12": {
+              am: "郑磊",
+              pm: "",
+            },
+            "2021-12-13": {
+              am: "郑磊 高萍 高萍",
+              pm: "侯霜 高萍 高萍",
+            },
+            "2021-12-14": {
+              am: "熊祖应",
+              pm: "张悦",
+            },
+            "2021-12-15": {
+              am: "王青 张悦",
+              pm: "",
+            },
+            "2021-12-16": {
+              am: "姜蕾",
+              pm: "廖瑾岚",
+            },
+            "department": "肾内科"
+          },
+          {
+            "2021-12-08": {
+              am: '高萍',
+              pm: '高萍',
+            },
+            "2021-12-15": {
+              am: '高萍',
+              pm: '高萍 高萍 高萍 高萍 高萍 高萍 高萍',
+            },
+            "department": "矮小性早熟门诊副"
+          },
+          {
+            "2021-12-08": {
+              am: '高萍',
+              pm: '高萍',
+            },
+            "2021-12-15": {
+              am: '高萍',
+              pm: '高萍 高萍 高萍 高萍 高萍 高萍 高萍',
+            },
+            "department": "矮小性早熟门诊副"
+          }
+        ],
+        datetimeList: ["2021-12-08", "2021-12-09", "2021-12-10", "2021-12-11", "2021-12-12", "2021-12-13",
+          "2021-12-14", "2021-12-15", "2021-12-16", "2021-12-17", "2021-12-18", "2021-12-19", "2021-12-20",
+          "2021-12-21", "2021-12-22", "2021-12-23"
+        ],
+        arr: []
+      }
+    },
+    mounted() {
+      this.getInfo()
+
+      let results = []
+
+      let isGet = false
+
+      let startIndex = null
+
+      let _this = this
+      const templateList = this.templateList.slice(0)
+
+      function tranformData(templateList, results) {
+        startIndex = null
+        isGet = true
+        // isGet = false
+        for (let index = 0; index < templateList.length; index++) {
+          const item = templateList[index]
+          let obj = {}
+
+          _this.datetimeList.forEach(dateKey => {
+
+            obj[dateKey] = {
+              am: null,
+              pm: null
+            }
+
+            for (const date in item) {
+
+              if (date !== 'department') {
+                // 初始化 讲值 转换为 []
+                if (typeof item[date].am === 'string') {
+                  if (item[date].am.length > 0) {
+                    item[date].am = item[date].am.split(" ")
+                  }
+
+
+                  if (!item[date].am.length) {
+                    item[date].am = []
+                  }
+                }
+
+                if (typeof item[date].pm === 'string') {
+                  if (item[date].pm.length > 0) {
+                    item[date].pm = item[date].pm.split(" ")
+                  }
+                  if (!item[date].pm.length) {
+                    item[date].pm = []
+                  }
+                }
+
+                // 赋值 并删除第一位
+                if (dateKey === date) {
+                  obj[dateKey] = {
+                    am: item[date].am[0],
+                    pm: item[date].pm[0]
+                  }
+                  item[date].am.splice(0, 1)
+                  item[date].pm.splice(0, 1)
+                  // console.log(item[date].am)
+
+                  // // 递归
+                  if (item[date].am.length > 0 || item[date].pm.length > 0) {
+                    isGet = false
+                    startIndex = index
+                    return
+                  }
+                }
+              } else {
+                obj['department'] = item.department
+              }
+            }
+
+          })
+
+          results.push(obj)
+
+          if (startIndex !== null) {
+            break
+          }
+        }
+        if (!isGet) {
+
+          tranformData(templateList.slice(startIndex, templateList.length), results)
+          console.log(templateList)
+        }
+
+      }
+      tranformData(templateList, results)
+
+      this.arr = results
+    },
+    methods: {
+      getInfo: function () {
+        const _this = this
+        this.datetimeList.forEach(function (item) {
+          const weekData = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+          const myDate = new Date(Date.parse(item.replace(/-/g, '/')))
+          _this.template.push({
+            id: weekData[myDate.getDay()],
+            data: item.slice(5)
+          })
+        })
+      }
+    },
+    computed: {
+      noDep() {
+        return function (value) {
+          return typeof value !== 'string'
+        }
+      },
+      mergeRowspan() {
+        return function (item, index) {
+          const rowspan = this.arr.filter(obj => obj.department === item.department).length
+          // console.log(this.arr.filter(obj => obj.department === item.department))
+          // console.log(this.arr)
+          return rowspan
+        }
+      },
+      showLeftTd() {
+        const _this = this
+        return function (item, index) {
+          function find(item) {
+            return _this.arr.findIndex(obj => item.department === obj.department)
+          }
+          let showTdIndex = null
+
+          const startIndex = find(item)
+
+          return startIndex
+        }
+      }
+    }
+  })
+</script>
+
+
+</html>
