@@ -4,9 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0,viewport-fit=cover"
+    name="viewport" />
+  <title>排班表</title>
   <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.14/vue.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/vant.min.js"></script>
+  <link href="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/index.min.css" rel="stylesheet">
 </head>
 
 <style>
@@ -20,18 +23,18 @@
   }
 
 
-  .container {
-    max-height: 500px !important;
-    overflow: auto;
+  .container-table {
+    max-height: calc(100vh - 157px) !important;
     width: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .table {
     width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
+    border-collapse: separate;
     border-spacing: 0;
-    border: 1px solid #e7e7e7;
+    border: 0;
   }
 
   .table thead tr th {
@@ -44,12 +47,47 @@
     position: sticky !important;
     left: 0 !important;
     z-index: 11 !important;
+    border-left: 1px solid #e7e7e7;
   }
 
   .table tbody td {
     text-align: center;
     height: 30px;
     font-size: 14px;
+    width: 50%;
+  }
+
+
+  tbody tr>td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 9;
+    background-color: #f5f5f5;
+    border-left: 1px solid #e7e7e7;
+  }
+
+  tbody tr>td:not(:first-child) {
+    width: 70px;
+  }
+
+  table th {
+    /* Apply both top and bottom borders to the <th> */
+    border-top: 1px solid #e7e7e7;
+    border-bottom: 1px solid #e7e7e7;
+    border-right: 1px solid #e7e7e7;
+  }
+
+  table td {
+    /* For cells, apply the border to one of each side only (right but not left, bottom but not top) */
+    border-bottom: 1px solid #e7e7e7;
+    border-right: 1px solid #e7e7e7;
+  }
+
+  table th:first-child,
+  table td:first-child {
+    /* Apply a left border on the first <td> or <th> in a row */
+    border-bottom: 1px solid #e7e7e7;
+    border-right: 1px solid #e7e7e7;
   }
 
   .day-th {
@@ -65,8 +103,8 @@
 
   .time-th {
     display: inline-block;
-    width: 50%;
     height: 30px;
+    flex: 1;
     line-height: 30px;
   }
 
@@ -85,25 +123,94 @@
     height: 60px;
   }
 
-  tbody tr td:first-child {
-    position: sticky;
-    left: 0;
-    z-index: 9;
-    background-color: #fff;
+  /* 隐藏滚动条 */
+  .container-table::-webkit-scrollbar {
+    display: none;
   }
 
-  /* 隐藏滚动条 */
-  tbody::-webkit-scrollbar {
-    display: none;
+  .header {
+    font-weight: bold;
+  }
+
+  .header-number {
+    color: rgba(255, 174, 23, 1);
+    font-size: 14px;
+    margin: 10px 0;
+  }
+
+  .filter {
+    margin-bottom: 10px;
+  }
+
+  .filter select {
+    outline: none;
+    border-radius: 4px;
+    border: 1px solid #e7e7e7;
+    padding: 4px;
+    /* color: #999; */
+    /* appearance: none;
+    -moz-appearance: none;
+    -webkit-appearance: none; */
+  }
+
+  .left {
+    position: relative;
+
+  }
+
+  .filter .arrow {
+    position: absolute;
+    right: 0px;
+    width: 10px;
+    height: 10px;
+    border-top: 10px solid #000;
+    border-right: 10px solid #000;
+  }
+
+  .style-text {
+    color: rgba(0, 210, 195, 1)
+  }
+
+  .scheduling-tips {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    padding: 10px 0;
+    border-top: 1px solid #e7e7e7;
+    background-color: #f5f5f5;
+    font-size: 14px;
+    color: #999;
+    padding-bottom: constant(safe-area-inset-bottom);
+    /* 兼容 iOS < 11.2 */
+    padding-bottom: env(safe-area-inset-bottom);
+    /* 兼容 iOS >= 11.2 */
   }
 </style>
 
 <body>
   <div id="app">
-    <div>各科专家门诊排班表</div>
-    <div></div>
-    <div class="container">
-      <table style="table-layout: auto;" class="table" border="1">
+    <div class="header">各科专家门诊排班表</div>
+    <div class="header-number">11月20日号源在今日15:00放出</div>
+    <div class="filter">
+      <select class="left" @change="onChange($event,'dep')">
+        <option value="all">全部科室</option>
+        <template v-for="item in templateList">
+          <option :value="item.department">{{item.department}}</option>
+        </template>
+        <i class="arrow"></i>
+      </select>
+
+      <select @change="onChange($event,'day')">
+        <option value="all">全部日期</option>
+        <template v-for="(item,index) in saveDateTimeList">
+          <option :value="item.date">{{item.id}}（{{item.data}}）</option>
+        </template>
+      </select>
+    </div>
+    <div class="container-table">
+      <table style="table-layout: auto;" class="table">
         <thead>
           <tr>
             <th class="table-th base-style" style="min-width: 80px !important;">科室</th>
@@ -127,8 +234,8 @@
               </td>
               <template v-for="items in item">
                 <template v-if="noDep(items)">
-                  <td>{{items.am || ""}}</td>
-                  <td>{{items.pm || ""}}</td>
+                  <td>{{items.am || " "}}</td>
+                  <td>{{items.pm || " "}}</td>
                 </template>
               </template>
             </tr>
@@ -136,10 +243,14 @@
         </tbody>
       </table>
     </div>
+    <div class="scheduling-tips">
+      <span>门诊排班表仅供查询，如需预约请点击</span>
+      <span class="style-text">立即预约</span>
+    </div>
   </div>
 </body>
-
 <script>
+  var vant = window.vant
   new Vue({
     el: '#app',
     data: function () {
@@ -320,129 +431,177 @@
               pm: '高萍 高萍 高萍 高萍 高萍 高萍 高萍',
             },
             "department": "矮小性早熟门诊副"
-          },
-          {
-            "2021-12-08": {
-              am: '高萍',
-              pm: '高萍',
-            },
-            "2021-12-15": {
-              am: '高萍',
-              pm: '高萍 高萍 高萍 高萍 高萍 高萍 高萍',
-            },
-            "department": "矮小性早熟门诊副"
           }
         ],
         datetimeList: ["2021-12-08", "2021-12-09", "2021-12-10", "2021-12-11", "2021-12-12", "2021-12-13",
           "2021-12-14", "2021-12-15", "2021-12-16", "2021-12-17", "2021-12-18", "2021-12-19", "2021-12-20",
           "2021-12-21", "2021-12-22", "2021-12-23"
         ],
-        arr: []
+        arr: [],
+        saveDateTimeList: [],
+        selectedDepList: [],
+        selectedDateList: []
       }
     },
     mounted() {
+
+      this.saveDepList = JSON.parse(JSON.stringify(this.templateList))
+      this.saveDateList = JSON.parse(JSON.stringify(this.datetimeList))
+
       this.getInfo()
 
-      let results = []
-
-      let isGet = false
-
-      let startIndex = null
-
-      let _this = this
-      const templateList = this.templateList.slice(0)
-
-      function tranformData(templateList, results) {
-        startIndex = null
-        isGet = true
-        // isGet = false
-        for (let index = 0; index < templateList.length; index++) {
-          const item = templateList[index]
-          let obj = {}
-
-          _this.datetimeList.forEach(dateKey => {
-
-            obj[dateKey] = {
-              am: null,
-              pm: null
-            }
-
-            for (const date in item) {
-
-              if (date !== 'department') {
-                // 初始化 讲值 转换为 []
-                if (typeof item[date].am === 'string') {
-                  if (item[date].am.length > 0) {
-                    item[date].am = item[date].am.split(" ")
-                  }
+      this.saveDateTimeList = this.template
 
 
-                  if (!item[date].am.length) {
-                    item[date].am = []
-                  }
-                }
-
-                if (typeof item[date].pm === 'string') {
-                  if (item[date].pm.length > 0) {
-                    item[date].pm = item[date].pm.split(" ")
-                  }
-                  if (!item[date].pm.length) {
-                    item[date].pm = []
-                  }
-                }
-
-                // 赋值 并删除第一位
-                if (dateKey === date) {
-                  obj[dateKey] = {
-                    am: item[date].am[0],
-                    pm: item[date].pm[0]
-                  }
-                  item[date].am.splice(0, 1)
-                  item[date].pm.splice(0, 1)
-                  // console.log(item[date].am)
-
-                  // // 递归
-                  if (item[date].am.length > 0 || item[date].pm.length > 0) {
-                    isGet = false
-                    startIndex = index
-                    return
-                  }
-                }
-              } else {
-                obj['department'] = item.department
-              }
-            }
-
-          })
-
-          results.push(obj)
-
-          if (startIndex !== null) {
-            break
-          }
-        }
-        if (!isGet) {
-
-          tranformData(templateList.slice(startIndex, templateList.length), results)
-          console.log(templateList)
-        }
-
-      }
-      tranformData(templateList, results)
-
-      this.arr = results
+      this.processList(this.templateList, this.datetimeList)
     },
     methods: {
-      getInfo: function () {
+      processList(list, datetimeList) {
+        vant.Toast.loading({
+          message: '加载中...',
+          forbidClick: true,
+        });
+        let results = []
+
+        let isGet = false
+
+        let startIndex = null
+
+        let _this = this
+        const templateList = JSON.parse(JSON.stringify(list))
+        const dateList = JSON.parse(JSON.stringify(datetimeList))
+
+        function tranformData(templateList, results) {
+          startIndex = null
+          isGet = true
+
+          for (let index = 0; index < templateList.length; index++) {
+            const item = templateList[index]
+            let obj = {}
+
+            dateList.forEach(dateKey => {
+
+              obj[dateKey] = {
+                am: null,
+                pm: null
+              }
+
+              for (const date in item) {
+
+                if (date !== 'department') {
+                  // 初始化 讲值 转换为 []
+                  if (typeof item[date].am === 'string') {
+                    if (item[date].am.length > 0) {
+                      item[date].am = item[date].am.split(" ")
+                    }
+
+
+                    if (!item[date].am.length) {
+                      item[date].am = []
+                    }
+                  }
+
+                  if (typeof item[date].pm === 'string') {
+                    if (item[date].pm.length > 0) {
+                      item[date].pm = item[date].pm.split(" ")
+                    }
+                    if (!item[date].pm.length) {
+                      item[date].pm = []
+                    }
+                  }
+
+                  // 赋值 并删除第一位
+                  if (dateKey === date) {
+                    obj[dateKey] = {
+                      am: item[date].am[0],
+                      pm: item[date].pm[0]
+                    }
+                    item[date].am.splice(0, 1)
+                    item[date].pm.splice(0, 1)
+                    // console.log(item[date].am)
+
+                    // // 递归
+                    if (item[date].am.length > 0 || item[date].pm.length > 0) {
+                      isGet = false
+                      startIndex = index
+                    }
+                  }
+                } else {
+                  obj['department'] = item.department
+                }
+              }
+
+            })
+
+            results.push(obj)
+
+            if (startIndex !== null) {
+              break
+            }
+          }
+          if (!isGet) {
+
+            tranformData(templateList.slice(startIndex, templateList.length), results)
+
+          }
+
+        }
+        tranformData(templateList, results)
+
+        this.arr = results
+        setTimeout(() => {
+          vant.Toast.clear()
+        }, 50)
+      },
+
+      getInfo: function (datetimeList = this.datetimeList) {
         const _this = this
-        this.datetimeList.forEach(function (item) {
+        let result = []
+        datetimeList.forEach(function (item) {
           const weekData = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
           const myDate = new Date(Date.parse(item.replace(/-/g, '/')))
-          _this.template.push({
+          result.push({
             id: weekData[myDate.getDay()],
-            data: item.slice(5)
+            data: item.slice(5),
+            date: item
           })
         })
+        this.template = result
+      },
+      onChange(e, key) {
+        console.log(e.target.value, key)
+
+        const value = e.target.value
+
+        if (key === 'dep') {
+
+          if (value === 'all') {
+
+            this.saveDepList = this.templateList
+          } else {
+
+            this.saveDepList = this.templateList.filter(item => item.department === value)
+          }
+
+          this.processList(this.saveDepList, this.saveDateList)
+
+        }
+
+        if (key === 'day') {
+
+          if (value === 'all') {
+            this.saveDateList = this.datetimeList
+            this.getInfo(this.saveDateList)
+          } else {
+            this.saveDateList = this.datetimeList.filter(item => item === value)
+            this.getInfo(this.saveDateList)
+          }
+
+          this.processList(this.saveDepList, this.saveDateList)
+          console.log(this.arr)
+        }
+
+
       }
     },
     computed: {
@@ -454,15 +613,13 @@
       mergeRowspan() {
         return function (item, index) {
           const rowspan = this.arr.filter(obj => obj.department === item.department).length
-          // console.log(this.arr.filter(obj => obj.department === item.department))
-          // console.log(this.arr)
           return rowspan
         }
       },
       showLeftTd() {
         const _this = this
         return function (item, index) {
-          function find(item) {
+          function find(item, index) {
             return _this.arr.findIndex(obj => item.department === obj.department)
           }
           let showTdIndex = null
