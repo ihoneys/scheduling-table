@@ -444,14 +444,12 @@
       }
     },
     mounted() {
-
       this.saveDepList = JSON.parse(JSON.stringify(this.templateList))
       this.saveDateList = JSON.parse(JSON.stringify(this.datetimeList))
 
       this.getInfo()
 
       this.saveDateTimeList = this.template
-
 
       this.processList(this.templateList, this.datetimeList)
     },
